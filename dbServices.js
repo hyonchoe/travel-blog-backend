@@ -2,10 +2,14 @@ require('dotenv').config()
 const { MongoClient } = require('mongodb')
 const ObjectId = require("mongodb").ObjectID
 
-const dbusername = process.env.DB_ADMIN_USERNAME
-const dbpassword = process.env.DB_ADMIN_PASSWORD
-const dbname = process.env.DB_NAME
-const uri = `mongodb+srv://${dbusername}:${dbpassword}@travelblog-ugmhk.mongodb.net/${dbname}?retryWrites=true&w=majority`
+const isDev = true
+
+const dbusername = (isDev) ? process.env.DB_ADMIN_USERNAME : process.env.DB_ADMIN_USERNAME_PRD
+const dbpassword = (isDev) ? process.env.DB_ADMIN_PASSWORD : process.env.DB_ADMIN_PASSWORD_PRD
+const dbname = (isDev) ? process.env.DB_NAME : process.env.DB_NAME_PRD
+
+const uri = (isDev) ? `mongodb+srv://${dbusername}:${dbpassword}@travelblog-ugmhk.mongodb.net/${dbname}?retryWrites=true&w=majority`
+                    : `mongodb+srv://${dbusername}:${dbpassword}@travelblog.aikd6.mongodb.net/${dbname}?retryWrites=true&w=majority`
 const sortConditions = { "endDate": -1, "startDate": -1, "_id": -1 }
 
 const createTrip = async (newTrip) => {
