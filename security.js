@@ -3,9 +3,13 @@ const jwksRsa = require('jwks-rsa');
 require('dotenv').config()
 
 // Auth0 configuration
+const isDev = false
+
+const domain = (isDev) ? process.env.AUTH0_DOMAIN : process.env.AUTH0_DOMAIN_PRD
+const audience = (isDev) ? process.env.AUTH0_AUDIENCE : process.env.AUTH0_AUDIENCE_PRD
 const authConfig = {
-    issuer: `https://${process.env.AUTH0_DOMAIN}/`,
-    audience: process.env.AUTH0_AUDIENCE,
+    issuer: `https://${domain}/`,
+    audience: audience,
     algorithms: ['RS256'],
 };
 
