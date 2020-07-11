@@ -4,8 +4,8 @@ require('dotenv').config()
 
 // Auth0 configuration
 const authConfig = {
-    issuer: `https://${process.env.REACT_APP_AUTH0_DOMAIN}/`,
-    audience: process.env.REACT_APP_AUTH0_AUDIENCE,
+    issuer: `https://${process.env.AUTH0_DOMAIN}/`,
+    audience: process.env.AUTH0_AUDIENCE,
     algorithms: ['RS256'],
 };
 
