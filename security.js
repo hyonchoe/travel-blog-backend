@@ -3,8 +3,7 @@ const jwksRsa = require('jwks-rsa');
 require('dotenv').config()
 
 // Auth0 configuration
-const isDev = false
-
+const isDev = (process.env.NODE_ENV !== 'production')
 const domain = (isDev) ? process.env.AUTH0_DOMAIN : process.env.AUTH0_DOMAIN_PRD
 const audience = (isDev) ? process.env.AUTH0_AUDIENCE : process.env.AUTH0_AUDIENCE_PRD
 const authConfig = {

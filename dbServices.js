@@ -2,8 +2,7 @@ require('dotenv').config()
 const { MongoClient } = require('mongodb')
 const ObjectId = require("mongodb").ObjectID
 
-const isDev = false
-
+const isDev = (process.env.NODE_ENV !== 'production')
 const dbusername = (isDev) ? process.env.DB_ADMIN_USERNAME : process.env.DB_ADMIN_USERNAME_PRD
 const dbpassword = (isDev) ? process.env.DB_ADMIN_PASSWORD : process.env.DB_ADMIN_PASSWORD_PRD
 const dbname = (isDev) ? process.env.DB_NAME : process.env.DB_NAME_PRD
