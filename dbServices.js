@@ -10,11 +10,24 @@ const dbname = (isDev) ? process.env.DB_NAME : process.env.DB_NAME_PRD
 const uri = (isDev) ? `mongodb+srv://${dbusername}:${dbpassword}@travelblog-ugmhk.mongodb.net/${dbname}?retryWrites=true&w=majority`
                     : `mongodb+srv://${dbusername}:${dbpassword}@travelblog.aikd6.mongodb.net/${dbname}?retryWrites=true&w=majority`
 const sortConditions = { "endDate": -1, "startDate": -1, "_id": -1 }
+let connection
+
+const connect = async () => {
+    try {
+        return await new MongoClient(uri, { useUnifiedTopology: true }).connect()
+    } catch (error) {
+        console.log(error)
+        throw error
+    }
+}
+
+const setConnection = (dbConnection) => {
+    connection = dbConnection
+}
 
 const createTrip = async (newTrip) => {
-    const mgClient = new MongoClient(uri, { useUnifiedTopology: true })
     try {
-        const client = await mgClient.connect()
+        const client = connection
         let result = await client.db("trips").collection("tripInfo").
             insertOne(newTrip)
         return result
@@ -24,9 +37,8 @@ const createTrip = async (newTrip) => {
 }
 
 const deleteTrip = async (tripId, userId) => {
-    const mgClient = new MongoClient(uri, { useUnifiedTopology: true })
     try {
-        const client = await mgClient.connect()
+        const client = connection
         let result = await client.db("trips").collection("tripInfo").
             findOneAndDelete({"_id": ObjectId(tripId), "userId": userId})
         return result
@@ -36,9 +48,8 @@ const deleteTrip = async (tripId, userId) => {
 }
 
 const getUserTrips = async (userId) => {
-    const mgClient = new MongoClient(uri, { useUnifiedTopology: true })
     try {
-        const client = await mgClient.connect()
+        const client = connection
         const result = await client.db("trips").collection("tripInfo").
             find({"userId": userId}).sort(sortConditions).toArray()
         return result
@@ -48,7 +59,6 @@ const getUserTrips = async (userId) => {
 }
 
 const getPublicTrips = async (initialLoad, lastLoadedTripInfo) => {
-    const mgClient = new MongoClient(uri, { useUnifiedTopology: true })
     let findConditions = { "public": true }
     const resultLimit = 25
 
@@ -79,7 +89,7 @@ const getPublicTrips = async (initialLoad, lastLoadedTripInfo) => {
     }
 
     try {
-        const client = await mgClient.connect()
+        const client = connection
         const result = await client.db("trips").collection("tripInfo").
             find(findConditions).sort(sortConditions).limit(resultLimit+1).toArray()
         if (result.length === resultLimit+1){
@@ -94,10 +104,8 @@ const getPublicTrips = async (initialLoad, lastLoadedTripInfo) => {
 }
 
 const updateTrip = async (tripId, userId, updatedTrip) => {
-    const mgClient = new MongoClient(uri, { useUnifiedTopology: true })
-
     try {
-        const client = await mgClient.connect()
+        const client = connection
         const result = await client.db("trips").collection("tripInfo").
             updateOne({"_id": ObjectId(tripId), "userId": userId}, { $set: updatedTrip })
         return result
@@ -107,10 +115,8 @@ const updateTrip = async (tripId, userId, updatedTrip) => {
 }
 
 const getImagesForTrip = async (tripId, userId) => {
-    const mgClient = new MongoClient(uri, { useUnifiedTopology: true })
-    
     try {
-        const client = await mgClient.connect()
+        const client = connection
         const result = await client.db("trips").collection("tripInfo").
             findOne({"_id": ObjectId(tripId), "userId": userId}, {projection: {_id:0 , images:1}})
         return result
@@ -123,4 +129,4 @@ const genUrlFileName = () => {
     return new ObjectId().toString()
 }
 
-module.exports = { createTrip, deleteTrip, getUserTrips, getPublicTrips, updateTrip, getImagesForTrip, genUrlFileName }
+module.exports = { connect, setConnection, createTrip, deleteTrip, getUserTrips, getPublicTrips, updateTrip, getImagesForTrip, genUrlFileName }
