@@ -51,7 +51,7 @@ const getUserTrips = async (userId) => {
     try {
         const client = connection
         const result = await client.db("trips").collection("tripInfo").
-            find({"userId": userId}).sort(sortConditions).toArray()
+            find({"userId": userId}).sort(sortConditions).toArray()   
         return result
     } catch (error) {
         throw error
@@ -64,9 +64,9 @@ const getPublicTrips = async (initialLoad, lastLoadedTripInfo) => {
 
     if (!initialLoad){
         const lastLoadedTripId = ObjectId(lastLoadedTripInfo.tripId)
-        const lastLoadedTripEndDate = new Date(lastLoadedTripInfo.endDate)
-        const lastLoadedTripStartDate = new Date(lastLoadedTripInfo.startDate)
-        const findMoreConditions = 
+        const lastLoadedTripEndDate = lastLoadedTripInfo.endDate
+        const lastLoadedTripStartDate = lastLoadedTripInfo.startDate
+        const findMoreConditions =
             { 
             "$or": [
                 { "endDate": { "$lt": lastLoadedTripEndDate } },
@@ -96,7 +96,7 @@ const getPublicTrips = async (initialLoad, lastLoadedTripInfo) => {
             result.length = resultLimit
         } else if (result.length > 0) {
             result[result.length-1].noMoreRecords = true
-        }        
+        }
         return result
     } catch (error) {
         throw error

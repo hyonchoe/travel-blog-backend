@@ -76,8 +76,8 @@ const getPublicTrips = async (req, res) => {
     const initialLoad = (req.query.tripId) ? false : true
     const lastLoadedTripInfo = (initialLoad) ? null : {
         tripId: req.query.tripId,
-        endDate: req.query.endDate,
-        startDate: req.query.startDate,
+        endDate: new Date(req.query.endDate),
+        startDate: new Date(req.query.startDate),
     }
 
     try {
