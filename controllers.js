@@ -192,6 +192,7 @@ const processTripLocData = (tripLocations) => {
 
 const processDatesImages = (data) => {
     data.forEach((trip) => {
+        //TODO: do i need to convert dates to moment() here?...
         trip.startDate = moment(trip.startDate)
         trip.endDate = moment(trip.endDate)            
         const tripImages = trip.images

@@ -2,226 +2,215 @@ const request = require('supertest')
 const expect = require('chai').expect
 const sinon = require('sinon')
 const tripMockData = require('../mockData/tripInfo')
+const dbHandler = require('../dbHandler')
 const security = require('../../security')
 const dbService = require('../../dbServices')
 const S3Service = require('../../S3Service')
 
 // Stub these methods before requiring app
+const userId = tripMockData.getUserId()
 sinon.stub(security, 'checkJwt').callsFake((req, res, next) => {
-    req.user = {sub: 'userid'}
+    req.user = {sub: userId}
     next()
+})
+sinon.stub(dbService, 'connect').callsFake(async () => {
+    return await dbHandler.connect()
 })
 const app = require('../../app')
 
-describe('Server APIs', () => {
-    describe('GET /publicTrips', () => {
-        afterEach(() => {
-            dbService.getPublicTrips.restore()
+setTimeout(() => {
+    describe('Server APIs', () => {
+        let dbTripsInfo
+        beforeEach( async () => {
+            dbTripsInfo = await dbHandler.setupWithTestingRecords()
+        })
+        after( async () => {
+            await dbHandler.closeDatabase()
         })
 
-        it('Getting public trips without images', done => {
-            const dbOutputMock = [ tripMockData.getTripWithDummyId(true, [], []) ]
-            const apiOutputMock = [ tripMockData.getTripWithDummyId(false, [], []) ]
+        describe('GET /publicTrips', () => {
+            it('Getting public trips - Initial load', (done) => {
+                request(app)
+                    .get('/publicTrips')
+                    .expect(200, (err, res) => {
+                        const trips = res.body
+                        let imgsContainS3Url = allImgsHaveS3Url(trips)
 
-            sinon.stub(dbService, 'getPublicTrips').returns(dbOutputMock)
-            
-            request(app)
-                .get('/publicTrips')
-                .expect(200, (err, res) => {
-                    expect(res.body).to.deep.equal(apiOutputMock)
-                    done()
-                })            
+                        expect(trips.length).to.equal(dbHandler.getPublicCounts())
+                        expect(imgsContainS3Url).to.equal(true)
+                        done()
+                    })            
+            })
+
+            it('Getting public trips - Subsequent load', (done) => {                
+                const trips = dbTripsInfo[0]
+                const ids = dbTripsInfo[1]
+                const tripIndex = dbHandler.getLastLoadedPublicTripIndex()
+
+                request(app)
+                    .get('/publicTrips')
+                    .query({ 
+                        tripId: ids[tripIndex].toString(),
+                        endDate: trips[tripIndex].endDate.toISOString(),
+                        startDate: trips[tripIndex].startDate.toISOString(),
+                    })
+                    .expect(200, (err, res) => {
+                        const trips = res.body
+                        let imgsContainS3Url = allImgsHaveS3Url(trips)
+
+                        expect(trips.length).to.equal(dbHandler.getSubsPublicCounts())
+                        expect(imgsContainS3Url).to.equal(true)
+                        done()
+                    })
+            })
         })
 
-        it('Getting public trips with images', done => {
-            const dbOutputMock = [ tripMockData.getTripWithDummyId(true, [], [
-                {fileUrlName: 'fileA'},
-                {fileUrlName: 'fileB'},
-            ]) ]
-            const apiOutputMock = [ tripMockData.getTripWithDummyId(false, [], [
-                {fileUrlName: 'fileA', S3Url: 'url_fileA'},
-                {fileUrlName: 'fileB', S3Url: 'url_fileB'},
-            ]) ]
+        describe('GET /trips passing authentication', () => {
+            it('Getting user trips', (done) => {
+                request(app)
+                    .get('/trips')
+                    .expect(200, (err, res) => {
+                        const trips = res.body
+                        let imgsContainS3Url = allImgsHaveS3Url(trips)
 
-            sinon.stub(dbService, 'getPublicTrips').returns(dbOutputMock)
-            const s3UrlStub = sinon.stub(S3Service, 'getImageS3URL')
-            s3UrlStub.withArgs('fileA').returns('url_fileA')
-            s3UrlStub.withArgs('fileB').returns('url_fileB')
-            
-            request(app)
-                .get('/publicTrips')
-                .expect(200, (err, res) => {
-                    S3Service.getImageS3URL.restore()
-                    expect(res.body).to.deep.equal(apiOutputMock)
-                    done()
-                })
-        })
-    })
-
-    describe('GET /trips passing authentication', () => {
-        afterEach(() => {
-            dbService.getUserTrips.restore()
+                        expect(trips.length).to.equal(dbHandler.getPrivateCounts()+dbHandler.getPublicCounts())
+                        expect(imgsContainS3Url).to.equal(true)
+                        done()
+                    })
+            })
         })
 
-        it('Getting user trips without images', (done) => {
-            const dbOutputMock = [ tripMockData.getTripWithDummyId(true, [], []) ]
-            const apiOutputMock = [ tripMockData.getTripWithDummyId(false, [], []) ]
+        describe('POST /trips', () => {
+            before(() => {
+                sinon.stub(S3Service, 'copyToPermanentBucket')
+            })
+            after(() => {
+                S3Service.copyToPermanentBucket.restore()
+            })
 
-            sinon.stub(dbService, 'getUserTrips').returns(dbOutputMock)
-            
-            request(app)
-                .get('/trips')
-                .expect(200, (err, res) => {
-                    expect(res.body).to.deep.equal(apiOutputMock)
-                    done()
-                })
+            it('Creating user trip', (done) => {
+                const reqBody = tripMockData.
+                    getTripForCreation([dbHandler.getNewLocInfo()], [dbHandler.getNewImgInfo()], true)
+                
+                request(app)
+                    .post('/trips')
+                    .send(reqBody)
+                    .expect(200, (err, res) => {
+                        expect(res.body.insertedId.length).to.be.gt(0)
+                        done()
+                    })
+            })
         })
 
-        it('Getting user trips with images', (done) => {
-            const dbOutputMock = [ tripMockData.getTripWithDummyId(true, [], [
-                {fileUrlName: 'fileA'},
-                {fileUrlName: 'fileB'},
-            ]) ]
-            const apiOutputMock = [ tripMockData.getTripWithDummyId(false, [], [
-                {fileUrlName: 'fileA', S3Url: 'url_fileA'},
-                {fileUrlName: 'fileB', S3Url: 'url_fileB'},
-            ]) ]
+        describe('DELETE /trips/:tripId', () => {
+            before(() => {
+                sinon.stub(S3Service, 'deleteS3Images')
+            })
+            after(() => {
+                S3Service.deleteS3Images.restore()
+            })
 
-            sinon.stub(dbService, 'getUserTrips').returns(dbOutputMock)
-            const s3UrlStub = sinon.stub(S3Service, 'getImageS3URL')
-            s3UrlStub.withArgs('fileA').returns('url_fileA')
-            s3UrlStub.withArgs('fileB').returns('url_fileB')
-            
-            request(app)
-                .get('/trips')
-                .expect(200, (err, res) => {
-                    S3Service.getImageS3URL.restore()
-                    expect(res.body).to.deep.equal(apiOutputMock)
-                    done()
-                })
-        })
-    })
+            it('Delete a trip', (done) => {
+                const ids = dbTripsInfo[1]
+                const tripId = ids[0].toString()
 
-    describe('POST /trips', () => {
-        afterEach(() => {
-            dbService.createTrip.restore()
-            S3Service.copyToPermanentBucket.restore()
-        })
+                request(app)
+                    .delete(`/trips/${tripId}`)
+                    .expect(200, (err, res) => {
+                        const deletedTrip = res.body.value
+                        expect(deletedTrip).to.exist
+                        done()
+                    })
+            })
 
-        it('Creating user trip without location and images', (done) => {
-            const reqBody = tripMockData.getTripWithDummyId(false, [], [])
-            
-            sinon.stub(S3Service, 'copyToPermanentBucket')
-            sinon.stub(dbService, 'createTrip')
-
-            request(app)
-                .post('/trips')
-                .send(reqBody)
-                .expect(200, done)
+            it('Delete a trip with invalid trip id', (done) => {
+                const randomObjectId = dbHandler.getNewObjectIdStr()
+                request(app)
+                    .delete(`/trips/${randomObjectId}`)
+                    .expect(200, (err, res) => {
+                        const deletedTrip = res.body.value
+                        expect(deletedTrip).to.be.null
+                        done()
+                    })
+            })
         })
 
-        it('Creating user trip without images', (done) => {
-            const locations = [{latLng: ['20.2', '30.5']}, {latLng: ['50.12', '-25.74']}]
-            const reqBody = tripMockData.getTripWithDummyId(false, locations, [])
-            
-            sinon.stub(S3Service, 'copyToPermanentBucket')
-            sinon.stub(dbService, 'createTrip')
+        describe('PUT /trips/:tripId', () => {
+            before(() => {
+                sinon.stub(S3Service, 'copyToPermanentBucket')
+                sinon.stub(S3Service, 'deleteS3Images')
+            })
+            after(() => {
+                S3Service.copyToPermanentBucket.restore()
+                S3Service.deleteS3Images.restore()
+            })
 
-            request(app)
-                .post('/trips')
-                .send(reqBody)
-                .expect(200, done)
+            it('Update a trip', (done) => {
+                const ids = dbTripsInfo[1]
+                const tripId = ids[0].toString()
+                const reqBody = tripMockData.
+                    getTripForCreation([dbHandler.getNewLocInfo()], [dbHandler.getNewImgInfo()], true)
+                
+                request(app)
+                    .put(`/trips/${tripId}`)
+                    .send(reqBody)
+                    .expect(200, (err, res) => {
+                        expect(res.body.modifiedCount).to.equal(1)
+                        done()
+                    })
+            })
+
+            it('Update a trip with invlaid trip id', (done) => {
+                const randomObjectId = dbHandler.getNewObjectIdStr()
+                const reqBody = tripMockData.
+                    getTripForCreation([dbHandler.getNewLocInfo()], [dbHandler.getNewImgInfo()], true)
+
+                request(app)
+                    .put(`/trips/${randomObjectId}`)
+                    .send(reqBody)
+                    .expect(200, (err, res) => {
+                        expect(res.body.modifiedCount).to.equal(0)
+                        done()
+                    })
+            })
         })
 
-        it('Creating user trip without location', (done) => {
-            const images = [{fileUrlName: 'fileA', S3Url: 'url_fileA'}, {fileUrlName: 'fileB', S3Url: 'url_fileB'}]
-            const reqBody = tripMockData.getTripWithDummyId(false, [], images)
-            
-            sinon.stub(S3Service, 'copyToPermanentBucket')
-            sinon.stub(dbService, 'createTrip')
+        describe('GET /get-signed-url', () => {
+            afterEach(() => {
+                S3Service.genSignedUrlPut.restore()
+            })
 
-            request(app)
-                .post('/trips')
-                .send(reqBody)
-                .expect(200, done)            
-        })
+            it('Get s3 signed url', (done) => {
+                const fileType = 'image/jpeg'
+                const apiOutputMock = 'urlfilename_'+fileType
+                sinon.stub(S3Service, 'genSignedUrlPut').returns(apiOutputMock)
 
-        it('Creating user trip with location and images', (done) => {
-            const locations = [{latLng: ['20.2', '30.5']}, {latLng: ['50.12', '-25.74']}]
-            const images = [{fileUrlName: 'fileA', S3Url: 'url_fileA'}, {fileUrlName: 'fileB', S3Url: 'url_fileB'}]
-            const reqBody = tripMockData.getTripWithDummyId(false, locations, images)
-            
-            sinon.stub(S3Service, 'copyToPermanentBucket')
-            sinon.stub(dbService, 'createTrip')
-
-            request(app)
-                .post('/trips')
-                .send(reqBody)
-                .expect(200, done)
-        })
-    })
-
-    describe('DELETE /trips/:tripId', () => {
-        afterEach(() => {
-            dbService.deleteTrip.restore()
-            S3Service.deleteS3Images.restore()
-        })
-
-        it('Delete a trip', (done) => {
-            sinon.stub(dbService, 'deleteTrip').returns({})
-            sinon.stub(S3Service, 'deleteS3Images')
-
-            request(app)
-                .delete('/trips/:1234')
-                .expect(200, done)
-        })
-    })
-
-    describe('PUT /trips/:tripId', () => {
-        afterEach(() => {
-            dbService.getImagesForTrip.restore()
-            dbService.updateTrip.restore()
-            S3Service.copyToPermanentBucket.restore()
-            S3Service.deleteS3Images.restore()
-        })
-
-        it('Update a trip', (done) => {
-            const locations = [{latLng: ['20.2', '30.5']}, {latLng: ['50.12', '-25.74']}]
-            const images = [{fileUrlName: 'fileA', S3Url: 'url_fileA'}, {fileUrlName: 'fileB', S3Url: 'url_fileB'}]
-            const reqBody = tripMockData.getTripWithDummyId(false, locations, images)
-            
-            sinon.stub(dbService, 'getImagesForTrip').returns({images: images})
-            sinon.stub(dbService, 'updateTrip').returns({})
-            sinon.stub(S3Service, 'copyToPermanentBucket')
-            sinon.stub(S3Service, 'deleteS3Images')
-
-            request(app)
-                .put('/trips/:1234')
-                .send(reqBody)
-                .expect(200, done)
+                request(app)
+                    .get('/get-signed-url')
+                    .query({ type: fileType })
+                    .expect(200, (err, res) => {
+                        expect(res.text).to.equal(apiOutputMock)
+                        done()
+                    })
+            })
         })
     })
 
-    describe('GET /get-signed-url', () => {
-        afterEach(() => {
-            dbService.genUrlFileName.restore()
-            S3Service.genSignedUrlPut.restore()
-        })
+run()
+}, 5000)
 
-        it('Get s3 signed url', (done) => {
-            const urlFileName = 'urlfilename'
-            const fileType = 'image/jpeg'
-            const apiOutputMock = urlFileName+'_'+fileType
-            sinon.stub(dbService, 'genUrlFileName').returns(urlFileName)
-            sinon.stub(S3Service, 'genSignedUrlPut').withArgs(urlFileName, fileType).returns(apiOutputMock)
+const allImgsHaveS3Url = (trips) => {
+    for(let i=0; i<trips.length; i++){
+        const tripImages = trips[i].images
+        if(tripImages && tripImages.length > 0){
+            for(let j=0; j<tripImages.length; j++){
+                if (!tripImages[j].S3Url){
+                    imgsContainS3Url = false
+                    return false
+                }
+            }
+        }
+    }
 
-            request(app)
-                .get('/get-signed-url')
-                .query({ type: fileType })
-                .expect(200, (err, res) => {
-                    expect(res.text).to.equal(apiOutputMock)
-                    done()
-                })
-        })
-    })
-})
+    return true
+}

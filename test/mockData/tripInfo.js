@@ -8,14 +8,17 @@ const yesterdayDate = yesterday.toDate()
 const yesterdayISOStr = yesterday.toISOString()
 const twoDaysFromToday = moment().subtract(2, 'days').startOf('day')
 const twoDaysFromTodayDate = twoDaysFromToday.toDate()
+const userId = 'userid'
 
 const unchangingFields = {
-    userId: 'userid',
+    userId: userId,
     userName: 'username',
     userEmail: 'useremail@useremail',
     title: 'title',
     details: 'details',
 }
+
+const getUserId = () => (userId)
 
 const getTripWithDummyId = (useDateObject, locations, images) => {
     const tripInfo = {
@@ -54,4 +57,4 @@ const getTripForCreationOlderDate = (locations, images, public) => {
     return tripInfo
 }
 
-module.exports = { getTripWithDummyId, getTripForCreation, getTripForCreationOlderDate }
+module.exports = { getTripWithDummyId, getTripForCreation, getTripForCreationOlderDate, getUserId }
