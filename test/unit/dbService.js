@@ -1,3 +1,9 @@
+/**
+ * Unit tests for dbService.js
+ * 
+ * Run by running 'mocha --exit test/unit' in command line.
+ */
+
 const expect = require('chai').expect
 const tripMockData = require('../mockData/tripInfo')
 const dbService = require('../../dbServices')

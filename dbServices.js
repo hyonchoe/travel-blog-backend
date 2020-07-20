@@ -1,3 +1,7 @@
+/**
+ * Handles interaction with MongoDb
+ */
+
 require('dotenv').config()
 const { MongoClient } = require('mongodb')
 const ObjectId = require("mongodb").ObjectID
@@ -15,19 +19,31 @@ const uri = (isDev) ? `mongodb+srv://${dbUserName}:${dbPassword}@travelblog-ugmh
                     : `mongodb+srv://${dbUserName}:${dbPassword}@travelblog.aikd6.mongodb.net/${dbName}?retryWrites=true&w=majority`
 let connection
 
+/**
+ * Connects to MongoDb client
+ */
 const connect = async () => {
     try {
         return await new MongoClient(uri, { useUnifiedTopology: true }).connect()
     } catch (error) {
-        console.log(error)
+        console.error(error)
         throw error
     }
 }
 
+/**
+ * Sets the MongoDb connection
+ * @param {Object} dbConnection MongoDb connection
+ */
 const setConnection = (dbConnection) => {
     connection = dbConnection
 }
 
+/**
+ * Creates new trip in the database
+ * @param {Object} newTrip Trip data
+ * @returns {Object} Database action result
+ */
 const createTrip = async (newTrip) => {
     try {
         const client = connection
@@ -39,6 +55,12 @@ const createTrip = async (newTrip) => {
     }
 }
 
+/**
+ * Deletes existing trip in the database and returns database action result
+ * @param {String} tripId Trip ID of trip to delete
+ * @param {String} userId Authenticated user ID
+ * @returns {Object} Database action result
+ */
 const deleteTrip = async (tripId, userId) => {
     try {
         const client = connection
@@ -50,6 +72,11 @@ const deleteTrip = async (tripId, userId) => {
     }
 }
 
+/**
+ * Retrieves all trips created by the given user sorted by trip dates
+ * @param {String} userId Authenticated user ID
+ * @returns {Array} User's trips
+ */
 const getUserTrips = async (userId) => {
     try {
         const client = connection
@@ -61,10 +88,15 @@ const getUserTrips = async (userId) => {
     }
 }
 
+/**
+ * Retrieves public trips in the database sorted by trip dates
+ * @param {boolean} initialLoad Flag for initial load
+ * @param {Object} lastLoadedTripInfo Last loaded trip data
+ * @returns {Array} Public trips
+ */
 const getPublicTrips = async (initialLoad, lastLoadedTripInfo) => {
     let findConditions = { "public": true }
     
-
     if (!initialLoad){
         const lastLoadedTripId = ObjectId(lastLoadedTripInfo.tripId)
         const lastLoadedTripEndDate = lastLoadedTripInfo.endDate
@@ -106,6 +138,13 @@ const getPublicTrips = async (initialLoad, lastLoadedTripInfo) => {
     }
 }
 
+/**
+ * Updates existing trip in the database with given data
+ * @param {String} tripId Trip ID for trip to update
+ * @param {String} userId Authenticated user ID
+ * @param {Object} updatedTrip Updated trip data
+ * @returns {Object} Database action result
+ */
 const updateTrip = async (tripId, userId, updatedTrip) => {
     try {
         const client = connection
@@ -117,6 +156,12 @@ const updateTrip = async (tripId, userId, updatedTrip) => {
     }
 }
 
+/**
+ * Retrieves images in the database for the given trip
+ * @param {String} tripId Trip ID for given trip
+ * @param {String} userId Authenticated user ID
+ * @returns {Object} Found trip data (only images)
+ */
 const getImagesForTrip = async (tripId, userId) => {
     try {
         const client = connection
@@ -124,10 +169,15 @@ const getImagesForTrip = async (tripId, userId) => {
             findOne({"_id": ObjectId(tripId), "userId": userId}, {projection: {_id:0 , images:1}})
         return result
     } catch (error) {
-
+        throw error
     }
 }
 
+/**
+ * Generates url file name to use for the uploaded image.
+ * This will be the file name for AWS S3 bucket.
+ * @returns {String} File name
+ */
 const genUrlFileName = () => {
     return new ObjectId().toString()
 }

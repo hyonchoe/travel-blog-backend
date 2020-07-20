@@ -1,3 +1,8 @@
+/**
+ * Handles user authentication using JSON Web Token (JWT)
+ * Used as middleware in Express routes
+ */
+
 const jwt = require('express-jwt')
 const jwksRsa = require('jwks-rsa')
 require('dotenv').config()

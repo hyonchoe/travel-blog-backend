@@ -1,3 +1,9 @@
+/** 
+ * Unit tests for S3Service.js
+ * 
+ * Run by running 'mocha --exit test/unit' in command line.
+ */
+
 require('dotenv').config()
 const expect = require('chai').expect
 const S3Service = require('../../S3Service')

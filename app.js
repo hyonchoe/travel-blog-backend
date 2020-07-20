@@ -1,3 +1,6 @@
+/**
+ * Sets up and starts the server
+ */
 const express = require('express')
 const cors = require('cors')
 require('dotenv').config()
@@ -16,7 +19,7 @@ dbService.connect()
         app.listen(port, () => console.log(`Listening on port ${port}`))
     })
     .catch((error) => {
-        console.log(error)
+        console.error(error)
         process.exit(1)
     })
 

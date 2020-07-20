@@ -1,24 +1,46 @@
+/**
+ * Router handling for APIs
+ */
+
 const express = require('express')
 const router = express.Router()
-const { checkJwt } = require('./security.js')
+const { checkJwt } = require('./security.js') // Middleware to check authentication
 const tripController = require('./controllers')
 
-// Create a trip (POST)
+/** 
+ * Creates new trip with given information
+ * (POST)
+ */
 router.post('/trips', checkJwt, tripController.createTrip)
 
-// Delete existing trip (DEL)
+/** 
+ * Deletes existing trip
+ * (DEL)
+ */
 router.delete('/trips/:tripId', checkJwt, tripController.deleteTrip)
 
-// Get existing trips for logged in user (GET)
+/** 
+ * Retrieves existing trips for logged in user
+ * (GET)
+ */
 router.get('/trips', checkJwt, tripController.getMyTrips)
 
-// Get existing  public trips (GET)
+/** 
+ * Retrieves existing public trips
+ * (GET)
+ */
 router.get('/publicTrips', tripController.getPublicTrips)
 
-// Update existing trip (PUT)
+/** 
+ * Updates an existing trip with given information
+ * (PUT)
+ */
 router.put('/trips/:tripId', checkJwt, tripController.updateTrip)
 
-// Generate S3 signed URL for photo upload
+/** 
+ * Generate S3 signed URL for uploading photo
+ * (GET)
+ */
 router.get('/get-signed-url', checkJwt, tripController.getS3SignedUrl)
 
 module.exports = router

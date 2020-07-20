@@ -1,3 +1,7 @@
+/** 
+ * Handles iteraction with AWS S3 for uploading images
+ */
+
 require('dotenv').config()
 const AWS = require('aws-sdk')
 
@@ -15,6 +19,11 @@ const s3 = new AWS.S3({
     signatureVersion: 'v4',
 })
 
+/**
+ * Deletes given images from S3
+ * @param {Array} names Images to delete represented as Object { Key: <name> }
+ * @returns S3 action result
+ */
 const deleteS3Images = (names) => {
   return new Promise((resolve, reject) => {
     const params = {
@@ -24,7 +33,7 @@ const deleteS3Images = (names) => {
 
     s3.deleteObjects(params, (err, result) => {
       if (err) {
-        console.log(err)
+        console.error(err)
         resolve(err) // From end user point of view, failure to delete on S3 is fine
       }
       resolve(result)
@@ -32,6 +41,12 @@ const deleteS3Images = (names) => {
   })
 }
 
+/**
+ * Generates signed URL to upload file to S3
+ * @param {String} name Image file name (aka URL file name)
+ * @param {String} type File type
+ * @returns {Object} Signed url data
+ */
 const genSignedUrlPut = (name, type) => {
   return new Promise((resolve, reject) => {
       const params = { 
@@ -43,7 +58,7 @@ const genSignedUrlPut = (name, type) => {
       }
       s3.getSignedUrl('putObject', params, (err, url) => {
         if (err) {
-          console.log(err)
+          console.error(err)
           reject(err)
         }
         resolve({ 
@@ -55,6 +70,11 @@ const genSignedUrlPut = (name, type) => {
     })
 }
 
+/**
+ * Copies image file from temporary bucket to permanent bucket in S3
+ * @param {String} name File name to copy
+ * @returns S3 action result
+ */
 const copyToPermanentBucket = (name) => {
   return new Promise ((resolve ,reject) => {
     const params = {
@@ -66,7 +86,7 @@ const copyToPermanentBucket = (name) => {
 
     s3.copyObject(params, (err, result) => {
       if (err) {
-        console.log(err)
+        console.error(err)
         reject(err)
       }
       resolve(result)
@@ -74,6 +94,11 @@ const copyToPermanentBucket = (name) => {
   })
 }
 
+/**
+ * Gets public view URL for uploaded image in S3
+ * @param {String} name File name
+ * @returns {String} URL for the image
+ */
 const getImageS3URL = (name) => {
   return `https://${bucketName}.s3.${bucketRegion}.amazonaws.com/${name}`
 }

@@ -1,3 +1,7 @@
+/**
+ * Memory MongoDB handler to managing memory database for testing
+ */
+
 const { Db, MongoClient } = require('mongodb')
 const ObjectId = require("mongodb").ObjectID
 const { MongoMemoryServer } = require('mongodb-memory-server')
@@ -60,20 +64,35 @@ const getNewLocInfo = () => (newLocInfo)
 const getNewImgInfo = () => (newImgInfo)
 const getLastLoadedPublicTripIndex = () => (lastLoadedPublicTripIndex)
 
+/**
+ * Generates unique ID to use in database
+ * @returns {String} ID string
+ */
 const getNewObjectIdStr = () => {
     return new ObjectId().toString()
 }
 
+/**
+ * Connects to memory MongoDB
+ * @returns {Object} MongoDB connection
+ */
 const connect = async () => {
     const uri = await mongoServer.getConnectionString()
     connection = await MongoClient.connect(uri, { useUnifiedTopology: true })
     return connection
 }
 
+/**
+ * Gets MongoDB connection
+ * @returns {Object} MongoDB connection
+ */
 const getConnection = () => {
     return connection
 }
 
+/**
+ * Closes MongoDB connection
+ */
 const closeDatabase = async () => {
     if (connection){
         await connection.close()
@@ -83,15 +102,21 @@ const closeDatabase = async () => {
     }
 }
 
+/**
+ * Clear out the MongoDB data
+ */
 const clearDatabase = async () => {
     if (connection){
         await connection.db('trips').dropDatabase()
     }
 }
 
-// Create test DB of 8 trips total
-// - 4 public trips (1 of them having older dates)
-// - 4 private trips (1 of them having older dates)
+/**
+ * Create test DB of 8 trips total for testing purpose:
+ * - 4 public trips
+ * - 4 private trips
+ * @returns {Array} Trips data at index 0 and tripIds at index 1
+ */
 const setupWithTestingRecords = async () => {
     await clearDatabase()
 

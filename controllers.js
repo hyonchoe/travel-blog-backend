@@ -1,8 +1,20 @@
+/**
+ * Controller that processes corresponding action for routes recevied
+ */
+
 const dbService = require('./dbServices')
 const S3Service = require('./S3Service')
 const moment = require('moment')
 
-const createTrip = async (req, res) => {    
+/**
+ * Creates new trip with given information in DB and sends back result to client.
+ * Uploaded images are moved from temporary S3 bucket to permanet S3 bucket.
+ * @param {Object} req Request
+ * @param {Object} res Response
+ * @param {Object} req.user Authenticated user info
+ * @param {Object} req.body Data for trip to be created
+ */
+const createTrip = async (req, res) => {
     const tripLocations = req.body.locations
     const tripImages = req.body.images
     // No need to save S3Url to database
@@ -33,11 +45,18 @@ const createTrip = async (req, res) => {
         const result = await dbService.createTrip(newTrip)
         res.send(result)
     } catch (error){
-        console.log(error)
+        console.error(error)
         res.send(error)
     }
 }
 
+/**
+ * Deletes given trip from DB and stored images in S3 and sends back result to client
+ * @param {Object} req Request
+ * @param {Object} res Response
+ * @param {String} req.user.sub Authenticated user ID
+ * @param {String} req.params.tripId Trip ID to be deleted
+ */
 const deleteTrip = async (req, res) => {
     const tripId = req.params.tripId
     const userId = req.user.sub
@@ -54,11 +73,17 @@ const deleteTrip = async (req, res) => {
         }
         res.send(result)
     } catch (error){
-        console.log(error)
+        console.error(error)
         res.send(error)
     }
 }
 
+/**
+ * Retrieves user's trips from DB and sends back result to client
+ * @param {Object} req Request
+ * @param {Object} res Response
+ * @param {String} req.user.sub Authenticated user ID
+ */
 const getMyTrips = async (req, res) => {
     const userId = req.user.sub
     try {
@@ -67,11 +92,22 @@ const getMyTrips = async (req, res) => {
         processDatesImages(result)
         res.send(result)
     } catch (error) {
-        console.log(error)
+        console.error(error)
         res.send(error)
     }
 }
 
+/**
+ * Retrieves public trips from DB and sends back result to client.
+ * There are two modes for this API:
+ * - Initial load: loads top x most recent trips
+ * - Subsequent load: loads next x most recent trips from the last loaded trip
+ * @param {Object} req Request
+ * @param {Object} res Response
+ * @param {String} req.query.tripId Trip ID of last loaded trip, null if initial load
+ * @param {String} req.query.endDate ISO string of end date of the last loaded trip
+ * @param {String} req.query.startDate ISO string of start date of the last loaded trip
+ */
 const getPublicTrips = async (req, res) => {
     const initialLoad = (req.query.tripId) ? false : true
     const lastLoadedTripInfo = (initialLoad) ? null : {
@@ -86,11 +122,21 @@ const getPublicTrips = async (req, res) => {
         processDatesImages(result)
         res.send(result)
     } catch (error) {
-        console.log(error)
+        console.error(error)
         res.send(error)
     }
 }
 
+/**
+ * Updates given trip with new given information and send back result to client.
+ * If existing image had been removed, then we delete from S3 as well.
+ * Newly uploaded images are moved from temporary S3 bucket to permanet S3 bucket.
+ * @param {Object} req Request
+ * @param {Object} res Response
+ * @param {String} req.user.sub Authenticated user ID
+ * @param {String} req.params.tripId Trip ID of the trip to update
+ * @param {Object} req.body Data for trip to be updated
+ */
 const updateTrip = async (req, res) => {
     const tripId = req.params.tripId
     const tripLocations = req.body.locations
@@ -137,25 +183,37 @@ const updateTrip = async (req, res) => {
         result = await dbService.updateTrip(tripId, userId, updatedTrip)
         res.send(result)
     } catch (error){
-        console.log(error)
+        console.error(error)
         res.send(error)
     }
 }
 
+/**
+ * Gets S3 signed url for uploading files to AWS S3 and sends back result to client
+ * @param {Object} req Request
+ * @param {Object} res Response
+ * @param {String} req.query.type File type for upload
+ */
 const getS3SignedUrl = async (req, res) => {
-    //TODO: Can add some validation for allowed file type check here
     const fileType = req.query.type
-    const urlFileName = await dbService.genUrlFileName()
+    const urlFileName = dbService.genUrlFileName()
 
     try {
         const urlInfo = await S3Service.genSignedUrlPut(urlFileName, fileType)
         res.send(urlInfo)
     } catch (error) {
-        console.log(err)
+        console.error(err)
         res.send(err)        
     }
 }
 
+//#region Helper methods
+/**
+ * Finds which existing images have beeen removed by the update to the trip
+ * @param {Array} existingImages Images already in the DB (and S3) for the trip
+ * @param {Array} updatedImages Images provided for the trip as an update
+ * @returns {Array} Removed images by the update
+ */
 const getImagesToRemove = (existingImages, updatedImages) => {
     const remove = []
     const updatedImagesUrlNames = updatedImages.map((img) => {
@@ -169,6 +227,13 @@ const getImagesToRemove = (existingImages, updatedImages) => {
 
     return remove
 }
+
+/**
+ * Finds which images in updated images are new images to add
+ * @param {Array} existingImages Images already in the DB (and S3) for the trip
+ * @param {Array} updatedImages Images provided for the trip as an update
+ * @returns {Array} New images to add
+ */
 const getImagesToAdd = (existingImages, updatedImages) => {
     const add = []
     const existingImagesUrlNames = existingImages.map((img) => {
@@ -183,6 +248,10 @@ const getImagesToAdd = (existingImages, updatedImages) => {
     return add
 }
 
+/**
+ * Parses location latitude and longitutde data from string to number 
+ * @param {Array} tripLocations
+ */
 const processTripLocData = (tripLocations) => {
     tripLocations.forEach((loc) => {
         loc.latLng[0] = parseFloat(loc.latLng[0])
@@ -190,6 +259,11 @@ const processTripLocData = (tripLocations) => {
     })
 }
 
+/**
+ * Parses date information to moment object
+ * and populates S3Url for images based on the file url name
+ * @param {Array} data Trips data
+ */
 const processDatesImages = (data) => {
     data.forEach((trip) => {
         //TODO: do i need to convert dates to moment() here?...
@@ -203,5 +277,6 @@ const processDatesImages = (data) => {
         }
     })
 }
+//#endregion
 
 module.exports = { createTrip, deleteTrip, getMyTrips, getPublicTrips, updateTrip, getS3SignedUrl }

@@ -1,3 +1,9 @@
+/**
+ * Integration tests for all routes using memory MongoDB as database.
+ * 
+ * Run by running 'mocha --delay --exit test/integration' in command line.
+ */
+
 const request = require('supertest')
 const expect = require('chai').expect
 const sinon = require('sinon')
@@ -18,6 +24,7 @@ sinon.stub(dbService, 'connect').callsFake(async () => {
 })
 const app = require('../../app')
 
+// Need to use timeout to allow server/app to make connection with database
 setTimeout(() => {
     describe('Server APIs', () => {
         let dbTripsInfo
@@ -199,6 +206,12 @@ setTimeout(() => {
 run()
 }, 5000)
 
+//#region Helper methods
+/**
+ * Check if all images have S3Url populated
+ * @param {Array} trips 
+ * @returns {boolean} True if all images have S3Url populated, false otherwise
+ */
 const allImgsHaveS3Url = (trips) => {
     for(let i=0; i<trips.length; i++){
         const tripImages = trips[i].images
@@ -214,3 +227,4 @@ const allImgsHaveS3Url = (trips) => {
 
     return true
 }
+//#endregion
