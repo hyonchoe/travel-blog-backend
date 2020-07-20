@@ -54,8 +54,8 @@ const createTrip = async (req, res) => {
  * Deletes given trip from DB and stored images in S3 and sends back result to client
  * @param {Object} req Request
  * @param {Object} res Response
- * @param {String} req.user.sub Authenticated user ID
- * @param {String} req.params.tripId Trip ID to be deleted
+ * @param {string} req.user.sub Authenticated user ID
+ * @param {string} req.params.tripId Trip ID to be deleted
  */
 const deleteTrip = async (req, res) => {
     const tripId = req.params.tripId
@@ -82,7 +82,7 @@ const deleteTrip = async (req, res) => {
  * Retrieves user's trips from DB and sends back result to client
  * @param {Object} req Request
  * @param {Object} res Response
- * @param {String} req.user.sub Authenticated user ID
+ * @param {string} req.user.sub Authenticated user ID
  */
 const getMyTrips = async (req, res) => {
     const userId = req.user.sub
@@ -104,9 +104,9 @@ const getMyTrips = async (req, res) => {
  * - Subsequent load: loads next x most recent trips from the last loaded trip
  * @param {Object} req Request
  * @param {Object} res Response
- * @param {String} req.query.tripId Trip ID of last loaded trip, null if initial load
- * @param {String} req.query.endDate ISO string of end date of the last loaded trip
- * @param {String} req.query.startDate ISO string of start date of the last loaded trip
+ * @param {string} req.query.tripId Trip ID of last loaded trip, null if initial load
+ * @param {string} req.query.endDate ISO string of end date of the last loaded trip
+ * @param {string} req.query.startDate ISO string of start date of the last loaded trip
  */
 const getPublicTrips = async (req, res) => {
     const initialLoad = (req.query.tripId) ? false : true
@@ -133,8 +133,8 @@ const getPublicTrips = async (req, res) => {
  * Newly uploaded images are moved from temporary S3 bucket to permanet S3 bucket.
  * @param {Object} req Request
  * @param {Object} res Response
- * @param {String} req.user.sub Authenticated user ID
- * @param {String} req.params.tripId Trip ID of the trip to update
+ * @param {string} req.user.sub Authenticated user ID
+ * @param {string} req.params.tripId Trip ID of the trip to update
  * @param {Object} req.body Data for trip to be updated
  */
 const updateTrip = async (req, res) => {
@@ -192,7 +192,7 @@ const updateTrip = async (req, res) => {
  * Gets S3 signed url for uploading files to AWS S3 and sends back result to client
  * @param {Object} req Request
  * @param {Object} res Response
- * @param {String} req.query.type File type for upload
+ * @param {string} req.query.type File type for upload
  */
 const getS3SignedUrl = async (req, res) => {
     const fileType = req.query.type

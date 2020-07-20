@@ -57,8 +57,8 @@ const createTrip = async (newTrip) => {
 
 /**
  * Deletes existing trip in the database and returns database action result
- * @param {String} tripId Trip ID of trip to delete
- * @param {String} userId Authenticated user ID
+ * @param {string} tripId Trip ID of trip to delete
+ * @param {string} userId Authenticated user ID
  * @returns {Object} Database action result
  */
 const deleteTrip = async (tripId, userId) => {
@@ -74,7 +74,7 @@ const deleteTrip = async (tripId, userId) => {
 
 /**
  * Retrieves all trips created by the given user sorted by trip dates
- * @param {String} userId Authenticated user ID
+ * @param {string} userId Authenticated user ID
  * @returns {Array} User's trips
  */
 const getUserTrips = async (userId) => {
@@ -140,8 +140,8 @@ const getPublicTrips = async (initialLoad, lastLoadedTripInfo) => {
 
 /**
  * Updates existing trip in the database with given data
- * @param {String} tripId Trip ID for trip to update
- * @param {String} userId Authenticated user ID
+ * @param {string} tripId Trip ID for trip to update
+ * @param {string} userId Authenticated user ID
  * @param {Object} updatedTrip Updated trip data
  * @returns {Object} Database action result
  */
@@ -158,8 +158,8 @@ const updateTrip = async (tripId, userId, updatedTrip) => {
 
 /**
  * Retrieves images in the database for the given trip
- * @param {String} tripId Trip ID for given trip
- * @param {String} userId Authenticated user ID
+ * @param {string} tripId Trip ID for given trip
+ * @param {string} userId Authenticated user ID
  * @returns {Object} Found trip data (only images)
  */
 const getImagesForTrip = async (tripId, userId) => {
@@ -176,7 +176,7 @@ const getImagesForTrip = async (tripId, userId) => {
 /**
  * Generates url file name to use for the uploaded image.
  * This will be the file name for AWS S3 bucket.
- * @returns {String} File name
+ * @returns {string} File name
  */
 const genUrlFileName = () => {
     return new ObjectId().toString()

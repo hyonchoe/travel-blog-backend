@@ -1,3 +1,7 @@
+/**
+ * Mock data to use for testing
+ */
+
 const moment = require('moment')
 
 const today = moment().startOf('day')

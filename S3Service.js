@@ -43,8 +43,8 @@ const deleteS3Images = (names) => {
 
 /**
  * Generates signed URL to upload file to S3
- * @param {String} name Image file name (aka URL file name)
- * @param {String} type File type
+ * @param {string} name Image file name (aka URL file name)
+ * @param {string} type File type
  * @returns {Object} Signed url data
  */
 const genSignedUrlPut = (name, type) => {
@@ -72,7 +72,7 @@ const genSignedUrlPut = (name, type) => {
 
 /**
  * Copies image file from temporary bucket to permanent bucket in S3
- * @param {String} name File name to copy
+ * @param {string} name File name to copy
  * @returns S3 action result
  */
 const copyToPermanentBucket = (name) => {
@@ -96,8 +96,8 @@ const copyToPermanentBucket = (name) => {
 
 /**
  * Gets public view URL for uploaded image in S3
- * @param {String} name File name
- * @returns {String} URL for the image
+ * @param {string} name File name
+ * @returns {string} URL for the image
  */
 const getImageS3URL = (name) => {
   return `https://${bucketName}.s3.${bucketRegion}.amazonaws.com/${name}`

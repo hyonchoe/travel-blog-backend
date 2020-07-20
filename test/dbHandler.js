@@ -66,7 +66,7 @@ const getLastLoadedPublicTripIndex = () => (lastLoadedPublicTripIndex)
 
 /**
  * Generates unique ID to use in database
- * @returns {String} ID string
+ * @returns {string} ID string
  */
 const getNewObjectIdStr = () => {
     return new ObjectId().toString()
