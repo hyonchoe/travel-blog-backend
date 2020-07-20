@@ -1,5 +1,5 @@
-const jwt = require('express-jwt');
-const jwksRsa = require('jwks-rsa');
+const jwt = require('express-jwt')
+const jwksRsa = require('jwks-rsa')
 require('dotenv').config()
 
 // Auth0 configuration
@@ -10,7 +10,7 @@ const authConfig = {
     issuer: `https://${domain}/`,
     audience: audience,
     algorithms: ['RS256'],
-};
+}
 
 // Dynamically provide a signing key
 // based on the kid in the header and 
@@ -20,11 +20,11 @@ const secret = jwksRsa.expressJwtSecret({
     rateLimit: true,
     jwksRequestsPerMinute: 5,
     jwksUri: `${authConfig.issuer}.well-known/jwks.json`,
-});
+})
 
 // Authentication middleware. When used, the
 // Access Token must exist and be verified against
 // the Auth0 JSON Web Key Set
-const checkJwt = jwt({ secret, ...authConfig });
+const checkJwt = jwt({ secret, ...authConfig })
 
-module.exports = { checkJwt };
+module.exports = { checkJwt }

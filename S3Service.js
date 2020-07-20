@@ -2,23 +2,23 @@ require('dotenv').config()
 const AWS = require('aws-sdk')
 
 const isDev = (process.env.NODE_ENV !== 'production')
-const BUCKET_REGION = process.env.S3_BUCKET_REGION
-const ID = process.env.S3_ID
-const ACCESS_KEY = process.env.S3_ACCESS_KEY
-const BUCKET_NAME = (isDev) ? process.env.S3_BUCKET_NAME : process.env.S3_BUCKET_NAME_PRD
-const TEMP_BUCKET_NAME = (isDev) ? process.env.S3_TEMP_BUCKET_NAME : process.env.S3_TEMP_BUCKET_NAME_PRD
+const bucketRegion = process.env.S3_BUCKET_REGION
+const s3Id = process.env.S3_ID
+const accessKey = process.env.S3_ACCESS_KEY
+const bucketName = (isDev) ? process.env.S3_BUCKET_NAME : process.env.S3_BUCKET_NAME_PRD
+const tempBucketName = (isDev) ? process.env.S3_TEMP_BUCKET_NAME : process.env.S3_TEMP_BUCKET_NAME_PRD
 
-AWS.config.update({region: BUCKET_REGION})
+AWS.config.update({region: bucketRegion})
 const s3 = new AWS.S3({
-    accessKeyId: ID,
-    secretAccessKey: ACCESS_KEY,
+    accessKeyId: s3Id,
+    secretAccessKey: accessKey,
     signatureVersion: 'v4',
 })
 
 const deleteS3Images = (names) => {
   return new Promise((resolve, reject) => {
     const params = {
-      Bucket: BUCKET_NAME,
+      Bucket: bucketName,
       Delete: { Objects: names },
     }
 
@@ -35,7 +35,7 @@ const deleteS3Images = (names) => {
 const genSignedUrlPut = (name, type) => {
   return new Promise((resolve, reject) => {
       const params = { 
-          Bucket: TEMP_BUCKET_NAME,
+          Bucket: tempBucketName,
           Key: name, 
           Expires: 120, 
           ContentType: type,
@@ -58,8 +58,8 @@ const genSignedUrlPut = (name, type) => {
 const copyToPermanentBucket = (name) => {
   return new Promise ((resolve ,reject) => {
     const params = {
-      Bucket: BUCKET_NAME,
-      CopySource: `/${TEMP_BUCKET_NAME}/${name}`,
+      Bucket: bucketName,
+      CopySource: `/${tempBucketName}/${name}`,
       Key: name,
       ACL:'public-read',
     }
@@ -75,7 +75,7 @@ const copyToPermanentBucket = (name) => {
 }
 
 const getImageS3URL = (name) => {
-  return `https://${BUCKET_NAME}.s3.${BUCKET_REGION}.amazonaws.com/${name}`
+  return `https://${bucketName}.s3.${bucketRegion}.amazonaws.com/${name}`
 }
 
 module.exports = { genSignedUrlPut, getImageS3URL, deleteS3Images, copyToPermanentBucket }

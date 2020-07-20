@@ -95,7 +95,7 @@ const clearDatabase = async () => {
 const setupWithTestingRecords = async () => {
     await clearDatabase()
 
-    let trips = []        
+    const trips = []        
     for(let i=0; i<testSetSize; i++){
         const isPublic = (i%2 == 0)
         let locations = []

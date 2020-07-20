@@ -157,8 +157,8 @@ const getS3SignedUrl = async (req, res) => {
 }
 
 const getImagesToRemove = (existingImages, updatedImages) => {
-    let remove = []
-    let updatedImagesUrlNames = updatedImages.map((img) => {
+    const remove = []
+    const updatedImagesUrlNames = updatedImages.map((img) => {
         return img.fileUrlName
     })
     existingImages.forEach((img) => {
@@ -170,8 +170,8 @@ const getImagesToRemove = (existingImages, updatedImages) => {
     return remove
 }
 const getImagesToAdd = (existingImages, updatedImages) => {
-    let add = []
-    let existingImagesUrlNames = existingImages.map((img) => {
+    const add = []
+    const existingImagesUrlNames = existingImages.map((img) => {
         return img.fileUrlName
     })
     updatedImages.forEach((img) => {

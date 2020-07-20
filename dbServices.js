@@ -2,14 +2,17 @@ require('dotenv').config()
 const { MongoClient } = require('mongodb')
 const ObjectId = require("mongodb").ObjectID
 
-const isDev = (process.env.NODE_ENV !== 'production')
-const dbusername = (isDev) ? process.env.DB_ADMIN_USERNAME : process.env.DB_ADMIN_USERNAME_PRD
-const dbpassword = (isDev) ? process.env.DB_ADMIN_PASSWORD : process.env.DB_ADMIN_PASSWORD_PRD
-const dbname = (isDev) ? process.env.DB_NAME : process.env.DB_NAME_PRD
+const SORT_CONDITIONS = { "endDate": -1, "startDate": -1, "_id": -1 }
+const RESULT_LIMIT = 25
+const TRIPS_DB_NAME = 'trips'
+const TRIPINFO_COLL_NAME = 'tripInfo'
 
-const uri = (isDev) ? `mongodb+srv://${dbusername}:${dbpassword}@travelblog-ugmhk.mongodb.net/${dbname}?retryWrites=true&w=majority`
-                    : `mongodb+srv://${dbusername}:${dbpassword}@travelblog.aikd6.mongodb.net/${dbname}?retryWrites=true&w=majority`
-const sortConditions = { "endDate": -1, "startDate": -1, "_id": -1 }
+const isDev = (process.env.NODE_ENV !== 'production')
+const dbUserName = (isDev) ? process.env.DB_ADMIN_USERNAME : process.env.DB_ADMIN_USERNAME_PRD
+const dbPassword = (isDev) ? process.env.DB_ADMIN_PASSWORD : process.env.DB_ADMIN_PASSWORD_PRD
+const dbName = (isDev) ? process.env.DB_NAME : process.env.DB_NAME_PRD
+const uri = (isDev) ? `mongodb+srv://${dbUserName}:${dbPassword}@travelblog-ugmhk.mongodb.net/${dbName}?retryWrites=true&w=majority`
+                    : `mongodb+srv://${dbUserName}:${dbPassword}@travelblog.aikd6.mongodb.net/${dbName}?retryWrites=true&w=majority`
 let connection
 
 const connect = async () => {
@@ -28,7 +31,7 @@ const setConnection = (dbConnection) => {
 const createTrip = async (newTrip) => {
     try {
         const client = connection
-        let result = await client.db("trips").collection("tripInfo").
+        const result = await client.db(TRIPS_DB_NAME).collection(TRIPINFO_COLL_NAME).
             insertOne(newTrip)
         return result
     } catch (error){
@@ -39,7 +42,7 @@ const createTrip = async (newTrip) => {
 const deleteTrip = async (tripId, userId) => {
     try {
         const client = connection
-        let result = await client.db("trips").collection("tripInfo").
+        const result = await client.db(TRIPS_DB_NAME).collection(TRIPINFO_COLL_NAME).
             findOneAndDelete({"_id": ObjectId(tripId), "userId": userId})
         return result
     } catch (error) {
@@ -50,8 +53,8 @@ const deleteTrip = async (tripId, userId) => {
 const getUserTrips = async (userId) => {
     try {
         const client = connection
-        const result = await client.db("trips").collection("tripInfo").
-            find({"userId": userId}).sort(sortConditions).toArray()   
+        const result = await client.db(TRIPS_DB_NAME).collection(TRIPINFO_COLL_NAME).
+            find({"userId": userId}).sort(SORT_CONDITIONS).toArray()   
         return result
     } catch (error) {
         throw error
@@ -60,7 +63,7 @@ const getUserTrips = async (userId) => {
 
 const getPublicTrips = async (initialLoad, lastLoadedTripInfo) => {
     let findConditions = { "public": true }
-    const resultLimit = 25
+    
 
     if (!initialLoad){
         const lastLoadedTripId = ObjectId(lastLoadedTripInfo.tripId)
@@ -90,10 +93,10 @@ const getPublicTrips = async (initialLoad, lastLoadedTripInfo) => {
 
     try {
         const client = connection
-        const result = await client.db("trips").collection("tripInfo").
-            find(findConditions).sort(sortConditions).limit(resultLimit+1).toArray()
-        if (result.length === resultLimit+1){
-            result.length = resultLimit
+        const result = await client.db(TRIPS_DB_NAME).collection(TRIPINFO_COLL_NAME).
+            find(findConditions).sort(SORT_CONDITIONS).limit(RESULT_LIMIT+1).toArray()
+        if (result.length === RESULT_LIMIT+1){
+            result.length = RESULT_LIMIT
         } else if (result.length > 0) {
             result[result.length-1].noMoreRecords = true
         }
@@ -106,7 +109,7 @@ const getPublicTrips = async (initialLoad, lastLoadedTripInfo) => {
 const updateTrip = async (tripId, userId, updatedTrip) => {
     try {
         const client = connection
-        const result = await client.db("trips").collection("tripInfo").
+        const result = await client.db(TRIPS_DB_NAME).collection(TRIPINFO_COLL_NAME).
             updateOne({"_id": ObjectId(tripId), "userId": userId}, { $set: updatedTrip })
         return result
     } catch (error) {
@@ -117,7 +120,7 @@ const updateTrip = async (tripId, userId, updatedTrip) => {
 const getImagesForTrip = async (tripId, userId) => {
     try {
         const client = connection
-        const result = await client.db("trips").collection("tripInfo").
+        const result = await client.db(TRIPS_DB_NAME).collection(TRIPINFO_COLL_NAME).
             findOne({"_id": ObjectId(tripId), "userId": userId}, {projection: {_id:0 , images:1}})
         return result
     } catch (error) {

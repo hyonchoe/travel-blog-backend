@@ -34,7 +34,7 @@ setTimeout(() => {
                     .get('/publicTrips')
                     .expect(200, (err, res) => {
                         const trips = res.body
-                        let imgsContainS3Url = allImgsHaveS3Url(trips)
+                        const imgsContainS3Url = allImgsHaveS3Url(trips)
 
                         expect(trips.length).to.equal(dbHandler.getPublicCounts())
                         expect(imgsContainS3Url).to.equal(true)
@@ -56,7 +56,7 @@ setTimeout(() => {
                     })
                     .expect(200, (err, res) => {
                         const trips = res.body
-                        let imgsContainS3Url = allImgsHaveS3Url(trips)
+                        const imgsContainS3Url = allImgsHaveS3Url(trips)
 
                         expect(trips.length).to.equal(dbHandler.getSubsPublicCounts())
                         expect(imgsContainS3Url).to.equal(true)
@@ -71,7 +71,7 @@ setTimeout(() => {
                     .get('/trips')
                     .expect(200, (err, res) => {
                         const trips = res.body
-                        let imgsContainS3Url = allImgsHaveS3Url(trips)
+                        const imgsContainS3Url = allImgsHaveS3Url(trips)
 
                         expect(trips.length).to.equal(dbHandler.getPrivateCounts()+dbHandler.getPublicCounts())
                         expect(imgsContainS3Url).to.equal(true)
