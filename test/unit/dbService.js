@@ -23,7 +23,7 @@ describe('MongoDB Services', () => {
     })
 
     it('Create a trip', async () => {
-        const tripToAdd = tripMockData.getTripForCreation([], [], true)
+        const tripToAdd = tripMockData.getTripForCreation(false, false, true)
 
         await dbService.createTrip(tripToAdd)
         
@@ -33,7 +33,7 @@ describe('MongoDB Services', () => {
     })
 
     it('Delete a trip', async () => {
-        const tripToAdd = tripMockData.getTripForCreation([], [], true)
+        const tripToAdd = tripMockData.getTripForCreation(false, false, true)
         const result = await dbHandler.getConnection().db('trips').collection('tripInfo').
             insertOne(tripToAdd)
 
@@ -46,9 +46,9 @@ describe('MongoDB Services', () => {
 
     describe('Get public trips', () => {
         it('Initial load', async () => {
-            const tripToAdd1 = tripMockData.getTripForCreation([], [], true)
-            const tripToAdd2 = tripMockData.getTripForCreation([], [], true)
-            const tripToAdd3 = tripMockData.getTripForCreation([], [], false)
+            const tripToAdd1 = tripMockData.getTripForCreation(false, false, true)
+            const tripToAdd2 = tripMockData.getTripForCreation(false, false, true)
+            const tripToAdd3 = tripMockData.getTripForCreation(false, false, false)
             await dbHandler.getConnection().db('trips').collection('tripInfo').
                 insertMany([tripToAdd1, tripToAdd2, tripToAdd3])
     
@@ -58,9 +58,9 @@ describe('MongoDB Services', () => {
             })
     
             it('Subsequent load', async () => {
-                const tripToAdd1 = tripMockData.getTripForCreation([], [], true)
-                const tripToAdd2 = tripMockData.getTripForCreation([], [], false)
-                const tripToAdd3 = tripMockData.getTripForCreationOlderDate([], [], true)
+                const tripToAdd1 = tripMockData.getTripForCreation(false, false, true)
+                const tripToAdd2 = tripMockData.getTripForCreation(false, false, false)
+                const tripToAdd3 = tripMockData.getTripForCreationOlderDate(false, false, true)
                 let result = await dbHandler.getConnection().db('trips').collection('tripInfo').
                     insertMany([tripToAdd1, tripToAdd2, tripToAdd3])
                 // Use first entry as last loaded trip
@@ -79,7 +79,7 @@ describe('MongoDB Services', () => {
 
     describe('Get user trips', () => {
         it('Correct user id', async () => {
-            const tripToAdd = tripMockData.getTripForCreation([], [], true)
+            const tripToAdd = tripMockData.getTripForCreation(false, false, true)
             const userId = tripToAdd.userId
             await dbHandler.getConnection().db('trips').collection('tripInfo').
                 insertOne(tripToAdd)
@@ -90,7 +90,7 @@ describe('MongoDB Services', () => {
         })
         
         it('Wrong user id', async () => {
-            const tripToAdd = tripMockData.getTripForCreation([], [], true)
+            const tripToAdd = tripMockData.getTripForCreation(false, false, true)
             const userId = tripToAdd.userId
             await dbHandler.getConnection().db('trips').collection('tripInfo').
                 insertOne(tripToAdd)
@@ -104,7 +104,7 @@ describe('MongoDB Services', () => {
 
     describe('Update trip', () => {
         it('Correct user id', async () => {
-            const tripToAdd = tripMockData.getTripForCreation([], [], true)
+            const tripToAdd = tripMockData.getTripForCreation(false, false, true)
             const userId = tripToAdd.userId
             let result = await dbHandler.getConnection().db('trips').collection('tripInfo').
                 insertOne(tripToAdd)
@@ -116,7 +116,7 @@ describe('MongoDB Services', () => {
         })
         
         it('Wrong user id', async () => {
-            const tripToAdd = tripMockData.getTripForCreation([], [], true)
+            const tripToAdd = tripMockData.getTripForCreation(false, false, true)
             const userId = tripToAdd.userId
             let result = await dbHandler.getConnection().db('trips').collection('tripInfo').
                 insertOne(tripToAdd)
@@ -129,41 +129,34 @@ describe('MongoDB Services', () => {
     })
 
     describe('Get images for trip', () => {
-        const imageInfo = [
-            {fileUrlName: 'fileA'},
-            {fileUrlName: 'fileB'}
-        ]
         it('Wrong user id', async () => {
-            const tripToAdd = tripMockData.getTripForCreation([], imageInfo, true)
+            const tripToAdd = tripMockData.getTripForCreation(false, true, true)
             const userId = tripToAdd.userId
             let result = await dbHandler.getConnection().db('trips').collection('tripInfo').
                 insertOne(tripToAdd)
 
-            tripToAdd.title = 'updated title'
             result = await dbService.getImagesForTrip(result.insertedId.toString(), userId+'wrong')
 
             expect(result).to.equal(null)
         })
 
         it('Trip has image info', async () => {
-            const tripToAdd = tripMockData.getTripForCreation([], imageInfo, true)
+            const tripToAdd = tripMockData.getTripForCreation(false, true, true)
             const userId = tripToAdd.userId
             let result = await dbHandler.getConnection().db('trips').collection('tripInfo').
                 insertOne(tripToAdd)
 
-            tripToAdd.title = 'updated title'
             result = await dbService.getImagesForTrip(result.insertedId.toString(), userId)
 
-            expect(result.images.length).to.equal(2)
+            expect(result.images.length).to.equal(tripToAdd.images.length)
         })
 
         it('Trip has no image info', async () => {
-            const tripToAdd = tripMockData.getTripForCreation([], [], true)
+            const tripToAdd = tripMockData.getTripForCreation(false, false, true)
             const userId = tripToAdd.userId
             let result = await dbHandler.getConnection().db('trips').collection('tripInfo').
                 insertOne(tripToAdd)
 
-            tripToAdd.title = 'updated title'
             result = await dbService.getImagesForTrip(result.insertedId.toString(), userId)
 
             expect(result.images.length).to.equal(0)

@@ -6,10 +6,8 @@ const moment = require('moment')
 
 const today = moment().startOf('day')
 const todayDate = today.toDate()
-const todayISOStr = today.toISOString()
 const yesterday = moment().subtract(1, 'days').startOf('day')
 const yesterdayDate = yesterday.toDate()
-const yesterdayISOStr = yesterday.toISOString()
 const twoDaysFromToday = moment().subtract(2, 'days').startOf('day')
 const twoDaysFromTodayDate = twoDaysFromToday.toDate()
 const userId = 'userid'
@@ -21,7 +19,6 @@ const unchangingFields = {
     title: 'title',
     details: 'details',
 }
-/////////////
 const locInfo1 = {
     fmtAddr: 'Seattle, WA, USA',
     latLng: [47.6062095, -122.3320708],
@@ -56,48 +53,33 @@ const newImgInfo = {
     fileUrlName: 'testimage3fileurlname',
     S3Url: 'pendingfileurl'
 }
-///////////////
 
 const getUserId = () => (userId)
 
-const getTripWithDummyId = (useDateObject, locations, images) => {
-    const tripInfo = {
-        ...unchangingFields,
-        _id: 'dummytripid',
-        startDate: (useDateObject) ? yesterdayDate : yesterdayISOStr,
-        endDate: (useDateObject) ? todayDate : todayISOStr,
-        locations: locations,
-        images: images,
-        public: true,
-    }
-    return tripInfo
-}
-
-const getTripForCreation = (locations, images, public) => {
+const getTripForCreation = (useLocations, useImages, public) => {
     const tripInfo = {
         ...unchangingFields,
         startDate: yesterdayDate,
         endDate: todayDate,
-        locations: locations,
-        images: images,
+        locations: (useLocations) ? [locInfo1, locInfo2] : [],
+        images: (useImages) ? [imgInfo1, imgInfo2] : [],
         public: public,
     }
     return tripInfo
 }
 
-const getTripForCreationOlderDate = (locations, images, public) => {
+const getTripForCreationOlderDate = (useLocations, useImages, public) => {
     const tripInfo = {
         ...unchangingFields,
         startDate: twoDaysFromTodayDate,
         endDate: yesterdayDate,
-        locations: locations,
-        images: images,
+        locations: (useLocations) ? [locInfo1, locInfo2] : [],
+        images: (useImages) ? [imgInfo1, imgInfo2] : [],
         public: public,
     }
     return tripInfo
 }
 
-//////////////////////////
 const memMongoDbMockData = () => {
     const publicCounts = 4
     const privateCounts = 4
@@ -127,9 +109,8 @@ const memMongoDbMockData = () => {
         getNewLocInfo, getNewImgInfo, getTripsWithImgsLocs, getTestSetSize
      }
 }
-/////////////////////////////////
 
 module.exports = {
-    getTripWithDummyId, getTripForCreation, getTripForCreationOlderDate, getUserId,
+    getTripForCreation, getTripForCreationOlderDate, getUserId,
     memMongoDbMockData
  }
