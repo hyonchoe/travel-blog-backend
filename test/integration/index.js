@@ -156,8 +156,11 @@ setTimeout(() => {
             it('Update a trip', (done) => {
                 const ids = dbTripsInfo[1]
                 const tripId = ids[0].toString()
-                const reqBody = tripMockData.
-                    getTripForCreation([dbMockData.getNewLocInfo()], [dbMockData.getNewImgInfo()], true)
+                const updatedTripData = tripMockData.
+                   getTripForCreation([dbMockData.getNewLocInfo()], [dbMockData.getNewImgInfo()], true)                   
+                updatedTripData.locations = [dbMockData.getNewLocInfo()]
+                updatedTripData.images = [dbMockData.getNewImgInfo()]
+                const reqBody = updatedTripData
                 
                 request(app)
                     .put(`/trips/${tripId}`)
@@ -170,8 +173,11 @@ setTimeout(() => {
 
             it('Update a trip with invlaid trip id', (done) => {
                 const randomObjectId = dbHandler.getNewObjectIdStr()
-                const reqBody = tripMockData.
-                    getTripForCreation([dbMockData.getNewLocInfo()], [dbMockData.getNewImgInfo()], true)
+                const updatedTripData = tripMockData.
+                   getTripForCreation([dbMockData.getNewLocInfo()], [dbMockData.getNewImgInfo()], true)                   
+                updatedTripData.locations = [dbMockData.getNewLocInfo()]
+                updatedTripData.images = [dbMockData.getNewImgInfo()]
+                const reqBody = updatedTripData                    
 
                 request(app)
                     .put(`/trips/${randomObjectId}`)
