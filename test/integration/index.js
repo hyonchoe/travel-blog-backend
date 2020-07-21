@@ -8,6 +8,7 @@ const request = require('supertest')
 const expect = require('chai').expect
 const sinon = require('sinon')
 const tripMockData = require('../mockData/tripInfo')
+const dbMockData = tripMockData.memMongoDbMockData()
 const dbHandler = require('../dbHandler')
 const security = require('../../security')
 const dbService = require('../../dbServices')
@@ -43,7 +44,7 @@ setTimeout(() => {
                         const trips = res.body
                         const imgsContainS3Url = allImgsHaveS3Url(trips)
 
-                        expect(trips.length).to.equal(dbHandler.getPublicCounts())
+                        expect(trips.length).to.equal(dbMockData.getPublicCounts())
                         expect(imgsContainS3Url).to.equal(true)
                         done()
                     })            
@@ -52,7 +53,7 @@ setTimeout(() => {
             it('Getting public trips - Subsequent load', (done) => {                
                 const trips = dbTripsInfo[0]
                 const ids = dbTripsInfo[1]
-                const tripIndex = dbHandler.getLastLoadedPublicTripIndex()
+                const tripIndex = dbMockData.getLastLoadedPublicTripIndex()
 
                 request(app)
                     .get('/publicTrips')
@@ -65,7 +66,7 @@ setTimeout(() => {
                         const trips = res.body
                         const imgsContainS3Url = allImgsHaveS3Url(trips)
 
-                        expect(trips.length).to.equal(dbHandler.getSubsPublicCounts())
+                        expect(trips.length).to.equal(dbMockData.getSubsPublicCounts())
                         expect(imgsContainS3Url).to.equal(true)
                         done()
                     })
@@ -80,7 +81,7 @@ setTimeout(() => {
                         const trips = res.body
                         const imgsContainS3Url = allImgsHaveS3Url(trips)
 
-                        expect(trips.length).to.equal(dbHandler.getPrivateCounts()+dbHandler.getPublicCounts())
+                        expect(trips.length).to.equal(dbMockData.getPrivateCounts()+dbMockData.getPublicCounts())
                         expect(imgsContainS3Url).to.equal(true)
                         done()
                     })
@@ -97,7 +98,7 @@ setTimeout(() => {
 
             it('Creating user trip', (done) => {
                 const reqBody = tripMockData.
-                    getTripForCreation([dbHandler.getNewLocInfo()], [dbHandler.getNewImgInfo()], true)
+                    getTripForCreation([dbMockData.getNewLocInfo()], [dbMockData.getNewImgInfo()], true)
                 
                 request(app)
                     .post('/trips')
@@ -156,7 +157,7 @@ setTimeout(() => {
                 const ids = dbTripsInfo[1]
                 const tripId = ids[0].toString()
                 const reqBody = tripMockData.
-                    getTripForCreation([dbHandler.getNewLocInfo()], [dbHandler.getNewImgInfo()], true)
+                    getTripForCreation([dbMockData.getNewLocInfo()], [dbMockData.getNewImgInfo()], true)
                 
                 request(app)
                     .put(`/trips/${tripId}`)
@@ -170,7 +171,7 @@ setTimeout(() => {
             it('Update a trip with invlaid trip id', (done) => {
                 const randomObjectId = dbHandler.getNewObjectIdStr()
                 const reqBody = tripMockData.
-                    getTripForCreation([dbHandler.getNewLocInfo()], [dbHandler.getNewImgInfo()], true)
+                    getTripForCreation([dbMockData.getNewLocInfo()], [dbMockData.getNewImgInfo()], true)
 
                 request(app)
                     .put(`/trips/${randomObjectId}`)
