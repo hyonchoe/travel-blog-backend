@@ -11,6 +11,8 @@ For frontend, visit https://github.com/hyonchoe/travel-blog
 ## Live Demo / Deployed Application
 Live website that makes use of this REST API: https://notemytravels.netlify.app/
 
+REST API is currently hosted by Heroku's free tier.
+
 ## Installation and Setup Instructions
 Note: You will need `node` and `npm` installed.
 
