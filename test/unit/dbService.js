@@ -6,7 +6,7 @@
 
 const expect = require('chai').expect
 const tripMockData = require('../mockData/tripInfo')
-const dbService = require('../../dbServices')
+const dbService = require('../../services/dbServices')
 const dbHandler = require('../dbHandler')
 
 describe('MongoDB Services', () => {

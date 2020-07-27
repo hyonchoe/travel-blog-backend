@@ -4,8 +4,8 @@
 
 const express = require('express')
 const router = express.Router()
-const { checkJwt } = require('./security.js') // Middleware to check authentication
-const tripController = require('./controllers')
+const { checkJwt } = require('../security') // Middleware to check authentication
+const tripController = require('../controllers')
 
 /** 
  * Creates new trip with given information

@@ -2,8 +2,8 @@
  * Controller that processes corresponding action for routes recevied
  */
 
-const dbService = require('./dbServices')
-const S3Service = require('./S3Service')
+const dbService = require('../services/dbServices')
+const S3Service = require('../services/S3Service')
 const moment = require('moment')
 
 /**

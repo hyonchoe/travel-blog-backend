@@ -6,7 +6,7 @@
 
 require('dotenv').config()
 const expect = require('chai').expect
-const S3Service = require('../../S3Service')
+const S3Service = require('../../services/S3Service')
 
 describe('AWS S3 Services', () => {
     describe('getImageS3URL()', () => {

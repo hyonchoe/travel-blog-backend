@@ -11,8 +11,8 @@ const tripMockData = require('../mockData/tripInfo')
 const dbMockData = tripMockData.memMongoDbMockData()
 const dbHandler = require('../dbHandler')
 const security = require('../../security')
-const dbService = require('../../dbServices')
-const S3Service = require('../../S3Service')
+const dbService = require('../../services/dbServices')
+const S3Service = require('../../services/S3Service')
 
 // Stub these methods before requiring app
 const userId = tripMockData.getUserId()
