@@ -15,14 +15,15 @@ Live website that makes use of this REST API: https://notemytravels.netlify.app/
 Note: You will need `node` and `npm` installed.
 
 ### Installation:
-Clone this repository, then run `npm install` in the repo folder 
+Clone this repository, then run `npm install` in the repo folder.
 
 ### To run tests:
-`mocha --delay -- exit test/integration` for integration tests
-`mocha --exit test/unit` for unit tests
+Run `mocha --delay -- exit test/integration` for integration tests.
+
+Run `mocha --exit test/unit` for unit tests.
 
 ### To start server:
-`node app.js`
+Run `node app.js`.
 
 ## Reflection
 I developed this project:
