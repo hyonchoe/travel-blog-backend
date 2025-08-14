@@ -3,7 +3,7 @@
 Travel Blog backend (REST API)
 
 ### Description
-REST API backend for web application that allows user to document and view their travlels.
+REST API backend for web application that allows user to document and view their travels.
 Provides CRUD actions for trip data.
 
 For frontend, visit https://github.com/hyonchoe/travel-blog
